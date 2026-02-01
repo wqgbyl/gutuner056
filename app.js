@@ -1504,3 +1504,62 @@ UI.btnStart.addEventListener("click", async ()=>{
   }
 });
 UI.btnStop.addEventListener("click", ()=>stop());
+
+
+// ---------------- settings modal (UI only)
+function setupSettingsModal(){
+  const btn = document.getElementById("btnSettings");
+  const modal = document.getElementById("settingsModal");
+  const closeBtn = document.getElementById("btnSettingsClose");
+  const backdrop = document.getElementById("settingsBackdrop");
+  if(!btn || !modal || !closeBtn || !backdrop) return;
+
+  const open = ()=>{
+    modal.classList.remove("hidden");
+    // Update summary values immediately
+    try{ updateSettingsSummary(); }catch(e){}
+  };
+  const close = ()=> modal.classList.add("hidden");
+
+  btn.addEventListener("click", open);
+  closeBtn.addEventListener("click", close);
+  backdrop.addEventListener("click", close);
+  document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape" && !modal.classList.contains("hidden")) close();
+  });
+}
+
+function updateSettingsSummary(){
+  const sumProfile = document.getElementById("sumProfile");
+  const sumKey = document.getElementById("sumKey");
+  const sumA4 = document.getElementById("sumA4");
+  const sumTol = document.getElementById("sumTol");
+  const elProfile = document.getElementById("inputProfile");
+  const elKey = document.getElementById("keyClass");
+  const elA4 = document.getElementById("aRef");
+  const elTol = document.getElementById("centsTolVal") || document.getElementById("tolVal");
+  const tolHidden = document.getElementById("centsTol");
+
+  if(sumProfile && elProfile) sumProfile.textContent = elProfile.value === "voice" ? "人声" : "双簧管";
+  if(sumKey && elKey) sumKey.textContent = elKey.value;
+  if(sumA4 && elA4) sumA4.textContent = (elA4.value||"440") + "Hz";
+  if(sumTol){
+    const v = tolHidden ? Number(tolHidden.value) : (elTol ? Number(elTol.textContent) : 20);
+    sumTol.textContent = "±" + (isFinite(v)?v:20) + "c";
+  }
+}
+
+// Hook into existing UI init
+try{
+  setupSettingsModal();
+  // keep summary updated when user changes settings
+  document.addEventListener("change", (e)=>{
+    const id = e && e.target && e.target.id;
+    if(["inputProfile","keyClass","aRef","centsTol"].includes(id)) updateSettingsSummary();
+  });
+  document.addEventListener("click", (e)=>{
+    const id = e && e.target && e.target.id;
+    if(["btnTolMinus","btnTolPlus"].includes(id)) setTimeout(updateSettingsSummary, 0);
+  });
+  setTimeout(updateSettingsSummary, 0);
+}catch(e){ console.error(e); }

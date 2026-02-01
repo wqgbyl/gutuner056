@@ -1,22 +1,12 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>音准分析器 V0.4.1</title><link rel="stylesheet" href="style.css"/></head><body><header class="topbar"><div><h1>音准分析器（网页版 V0.4.1）</h1><div class="sub">全音识别 · 更稳的长/短音切分 · 整段/单段回放 · 标准音(2秒)试听</div></div></header><main class="grid"><section class="card"><h2>测试设置</h2><div class="row"><label>输入类型</label><select id="inputProfile"><option value="oboe">双簧管</option><option value="voice" selected>人声（测试）</option></select></div><div class="row"><label>本次调性（用于分类）</label><select id="keyClass"><option value="C">C 大调</option><option value="G">G 大调</option><option value="D" selected>D 大调</option><option value="A">A 大调</option><option value="E">E 大调</option><option value="B">B 大调</option><option value="F">F 大调</option><option value="Bb">Bb 大调</option><option value="Eb">Eb 大调</option><option value="Ab">Ab 大调</option></select></div><div class="row"><label>A4 基准</label><select id="aRef"><option value="440">440 Hz</option><option value="442" selected>442 Hz</option></select></div>
-      <div class="row">
-        <label>合格阈值（± cents）</label>
-        <div class="inline">
-          <button id="btnTolMinus" class="smallBtn primaryBtn" type="button">-5</button>
-          <div class="tolBox"><span id="centsTolVal">10</span></div>
-          <button id="btnTolPlus" class="smallBtn primaryBtn" type="button">+5</button>
-          <input id="centsTol" type="hidden" value="20" />
-        </div>
-      </div>
-      <div class="row">
-        <label>长音阈值</label>
-        <div class="inline"><span class="fixedVal">150 ms（固定）</span></div>
-      </div>
-      <div class="row">
-        <label>短音权重</label>
-        <div class="inline"><span class="fixedVal">0.40（固定）</span></div>
-      </div>
-<div class="controls"><button id="btnStart">开始录制</button><button id="btnStop" disabled>结束并生成报告</button></div><div class="hint">“很多音被判成短音”通常是音高抖动导致事件拆碎。V0.4.1 已加入「换音确认(≥2次)」与「短间隙自动合并」。<br/>回放：报告区顶部有「整段回放 / 选中事件回放 / 标准音(2秒)」。</div></section><section class="card"><h2>实时监测</h2><div class="live"><div class="liveItem"><div class="label">检测音名</div><div class="value" id="liveNote">—</div></div><div class="liveItem"><div class="label">频率</div><div class="value" id="liveHz">—</div></div><div class="liveItem"><div class="label">偏差</div><div class="value" id="liveCents">—</div></div></div><div class="meterBox"><div class="meterLabel">输入电平</div><div class="meter"><div class="meterFill" id="meterFill"></div></div><div class="meterText" id="meterText">— dBFS</div></div><canvas id="scope" width="800" height="160" class="scope"></canvas>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>音准分析器 V0.4.1</title><link rel="stylesheet" href="style.css"/></head><body><header class="topbar"><div><h1>音准分析器（网页版 V0.4.1）</h1><button id="btnSettings" class="iconBtn" type="button" aria-label="设置">⚙️</button><div class="sub">全音识别 · 更稳的长/短音切分 · 整段/单段回放 · 标准音(2秒)试听</div></div></header><main class="grid"><section class="card"><h2>测试设置</h2>
+  <div class="settingsSummary">
+    <div class="pill"><span class="muted">输入</span> <span id="sumProfile">—</span></div>
+    <div class="pill"><span class="muted">调性</span> <span id="sumKey">—</span></div>
+    <div class="pill"><span class="muted">A4</span> <span id="sumA4">—</span></div>
+    <div class="pill"><span class="muted">阈值</span> <span id="sumTol">—</span></div>
+    <div class="hint">点右上角⚙️修改设置</div>
+  </div>
+</section><section class="card"><h2>实时监测</h2><div class="live"><div class="liveItem"><div class="label">检测音名</div><div class="value" id="liveNote">—</div></div><div class="liveItem"><div class="label">频率</div><div class="value" id="liveHz">—</div></div><div class="liveItem"><div class="label">偏差</div><div class="value" id="liveCents">—</div></div></div><div class="meterBox"><div class="meterLabel">输入电平</div><div class="meter"><div class="meterFill" id="meterFill"></div></div><div class="meterText" id="meterText">— dBFS</div></div><canvas id="scope" width="800" height="160" class="scope"></canvas>
 
       <div class="scorePanel">
         <div class="scoreCard">
@@ -52,4 +42,38 @@
         </div>
       </div>
 
-      <div class="tableWrap"><table id="eventsTable"><thead><tr><th>#</th><th>start–end(ms)</th><th>dur(ms)</th><th>检测音名</th><th>目标音名</th><th>Hz</th><th>目标Hz</th><th>cents</th><th>合格</th><th>分类</th></tr></thead><tbody></tbody></table></div><div class="footerNote" id="reportMeta"></div></section></main><script src="app.js"></script></body></html>
+      <div class="tableWrap"><table id="eventsTable"><thead><tr><th>#</th><th>start–end(ms)</th><th>dur(ms)</th><th>检测音名</th><th>目标音名</th><th>Hz</th><th>目标Hz</th><th>cents</th><th>合格</th><th>分类</th></tr></thead><tbody></tbody></table></div><div class="footerNote" id="reportMeta"></div></section></main><script src="app.js"></script>
+<div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="modalBackdrop" id="settingsBackdrop"></div>
+  <div class="modalSheet">
+    <div class="modalHeader">
+      <div id="settingsTitle" class="modalTitle">设置</div>
+      <button id="btnSettingsClose" class="iconBtn" type="button" aria-label="关闭">✕</button>
+    </div>
+    <div class="modalBody">
+      <div class="cardInner">
+<div class="row"><label>输入类型</label><select id="inputProfile"><option value="oboe">双簧管</option><option value="voice" selected>人声（测试）</option></select></div><div class="row"><label>本次调性（用于分类）</label><select id="keyClass"><option value="C">C 大调</option><option value="G">G 大调</option><option value="D" selected>D 大调</option><option value="A">A 大调</option><option value="E">E 大调</option><option value="B">B 大调</option><option value="F">F 大调</option><option value="Bb">Bb 大调</option><option value="Eb">Eb 大调</option><option value="Ab">Ab 大调</option></select></div><div class="row"><label>A4 基准</label><select id="aRef"><option value="440">440 Hz</option><option value="442" selected>442 Hz</option></select></div>
+      <div class="row">
+        <label>合格阈值（± cents）</label>
+        <div class="inline">
+          <button id="btnTolMinus" class="smallBtn primaryBtn" type="button">-5</button>
+          <div class="tolBox"><span id="centsTolVal">10</span></div>
+          <button id="btnTolPlus" class="smallBtn primaryBtn" type="button">+5</button>
+          <input id="centsTol" type="hidden" value="20" />
+        </div>
+      </div>
+      <div class="row">
+        <label>长音阈值</label>
+        <div class="inline"><span class="fixedVal">150 ms（固定）</span></div>
+      </div>
+      <div class="row">
+        <label>短音权重</label>
+        <div class="inline"><span class="fixedVal">0.40（固定）</span></div>
+      </div>
+<div class="controls"><button id="btnStart">开始录制</button><button id="btnStop" disabled>结束并生成报告</button></div><div class="hint">“很多音被判成短音”通常是音高抖动导致事件拆碎。V0.4.1 已加入「换音确认(≥2次)」与「短间隙自动合并」。<br/>回放：报告区顶部有「整段回放 / 选中事件回放 / 标准音(2秒)」。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body></html>
