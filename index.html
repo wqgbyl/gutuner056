@@ -16,14 +16,7 @@
         <label>短音权重</label>
         <div class="inline"><span class="fixedVal">0.40（固定）</span></div>
       </div>
-<div class="controls"><button id="btnStart">开始录制</button><button id="btnStop" disabled>结束并生成报告</button></div><div class="hint">“很多音被判成短音”通常是音高抖动导致事件拆碎。V0.4.1 已加入「换音确认(≥2次)」与「短间隙自动合并」。<br/>回放：报告区顶部有「整段回放 / 选中事件回放 / 标准音(2秒)」。</div></section><section class="card"><h2>实时监测</h2><div class="live"><div class="liveItem"><div class="label">检测音名</div><div class="value" id="liveNote">—</div></div><div class="liveItem"><div class="label">频率</div><div class="value" id="liveHz">—</div></div><div class="liveItem"><div class="label">偏差（相对目标音）</div><div class="value" id="liveCents">—</div></div></div><div class="meterBox"><div class="meterLabel">输入电平</div><div class="meter"><div class="meterFill" id="meterFill"></div></div><div class="meterText" id="meterText">— dBFS</div></div><div class="tunerCard">
-  <div class="tunerTop">
-    <div class="tunerA4" id="tunerA4">A4 = 440Hz</div>
-    <div class="tunerHz" id="tunerHz">—</div>
-  </div>
-  <canvas id="liveTuner" width="1200" height="520" class="liveTuner"></canvas>
-</div>
-<canvas id="scope" width="800" height="160" class="scope"></canvas>
+<div class="controls"><button id="btnStart">开始录制</button><button id="btnStop" disabled>结束并生成报告</button></div><div class="hint">“很多音被判成短音”通常是音高抖动导致事件拆碎。V0.4.1 已加入「换音确认(≥2次)」与「短间隙自动合并」。<br/>回放：报告区顶部有「整段回放 / 选中事件回放 / 标准音(2秒)」。</div></section><section class="card"><h2>实时监测</h2><div class="live"><div class="liveItem"><div class="label">检测音名</div><div class="value" id="liveNote">—</div></div><div class="liveItem"><div class="label">频率</div><div class="value" id="liveHz">—</div></div><div class="liveItem"><div class="label">偏差</div><div class="value" id="liveCents">—</div></div></div><div class="meterBox"><div class="meterLabel">输入电平</div><div class="meter"><div class="meterFill" id="meterFill"></div></div><div class="meterText" id="meterText">— dBFS</div></div><canvas id="scope" width="800" height="160" class="scope"></canvas>
 
       <div class="scorePanel">
         <div class="scoreCard">
