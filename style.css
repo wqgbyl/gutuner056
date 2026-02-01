@@ -367,3 +367,68 @@ h1{ font-size: 18px; }
   .card{ padding: 10px; }
   .exportBtn{ padding: 14px 14px; font-size: 15px; }
 }
+
+/* Analysis progress (percent gauge) */
+.analysisProgress{
+  display:flex;
+  gap: 12px;
+  align-items:center;
+  margin: 10px 0 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+}
+.analysisProgress.hidden{display:none}
+.ring{
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: conic-gradient(rgba(124,255,0,1) 0deg, rgba(124,255,0,1) var(--deg,0deg), rgba(255,255,255,0.10) var(--deg,0deg));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border: 1px solid var(--line);
+}
+.ringInner{
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: #0f1117;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.ringPct{
+  font-weight: 950;
+  font-size: 18px;
+}
+.ringSub{
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.analysisText{flex:1; min-width: 0;}
+.analysisLine{
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.analysisBar{
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.05);
+  overflow:hidden;
+}
+.analysisFill{
+  height: 100%;
+  width: 0%;
+  background: rgba(124,255,0,0.85);
+}
+@media (max-width: 520px){
+  .analysisProgress{padding: 8px;}
+  .ring{width: 74px; height:74px;}
+  .ringInner{width: 58px; height:58px;}
+}

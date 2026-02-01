@@ -892,6 +892,9 @@ async function start(){
     if(!isRunning) return;
 
     analyser.getFloatTimeDomainData(buf);
+    let currentRms=0;
+    for(let i=0;i<buf.length;i++) currentRms += buf[i]*buf[i];
+    currentRms = Math.sqrt(currentRms/buf.length);
     const params=readParams();
     const prof=getProfile();
 
@@ -899,6 +902,9 @@ async function start(){
       analyser.fftSize = prof.fftSize;
       buf = new Float32Array(analyser.fftSize);
       analyser.getFloatTimeDomainData(buf);
+    let currentRms=0;
+    for(let i=0;i<buf.length;i++) currentRms += buf[i]*buf[i];
+    currentRms = Math.sqrt(currentRms/buf.length);
     }
 
     frameCount++;
@@ -982,7 +988,7 @@ async function start(){
     curEvent.confArr.push(lastPitch.confidence);
 
     // timeline sample for trend/video
-    pitchTimeline.push({tMs: tMs, cents: cents, pass: Math.abs(cents) <= params.centsTol, category: ( (tMs-curEvent.startMs)>=params.longMs ? 'long' : (inKey?'short_in':'other') ), note: targetLabel, midi: midiRounded});
+    pitchTimeline.push({tMs: tMs, cents: cents, pass: Math.abs(cents) <= params.centsTol, category: ( (tMs-curEvent.startMs)>=params.longMs ? 'long' : (inKey?'short_in':'other') ), note: targetLabel, midi: midiRounded, rms: currentRms, hz: f, confidence: lastPitch.confidence});
 
     renderLive({detectedLabel, hz:f, cents});
     updateCounters(params);
@@ -1030,7 +1036,13 @@ function stop(){
 
   UI.liveClass.textContent="已结束";
   renderLive(null);
-  try{ renderReport(params); }catch(e){ console.error(e); alert('报告生成失败：'+(e && e.message ? e.message : e)); }
+  try{
+    setAnalysisProgress(1, '开始', '正在准备分析…');
+    events = await rebuildEventsOffline(params);
+    renderReport(params);
+  }catch(e){
+    hideAnalysisProgress();
+ console.error(e); alert('报告生成失败：'+(e && e.message ? e.message : e)); }
   renderTrend();
   if(UI.btnExportVideo) UI.btnExportVideo.disabled = !recordedBuffer;
 }
@@ -1565,3 +1577,172 @@ window.addEventListener('DOMContentLoaded', ()=>{
     setTimeout(updateSettingsSummary, 0);
   }catch(e){ console.error(e); }
 });
+// ---------------- offline segmentation (post analysis) with progress
+function rollingMedian(arr, i, win){
+  const s = Math.max(0, i-win+1);
+  const slice = [];
+  for(let k=s;k<=i;k++){
+    const v = arr[k];
+    if(Number.isFinite(v)) slice.push(v);
+  }
+  if(!slice.length) return NaN;
+  slice.sort((a,b)=>a-b);
+  const m = Math.floor(slice.length/2);
+  return slice.length%2 ? slice[m] : (slice[m-1]+slice[m])/2;
+}
+
+function setAnalysisProgress(pct, sub, line){
+  const wrap = document.getElementById("analysisProgressWrap");
+  const pctEl = document.getElementById("analysisPct");
+  const subEl = document.getElementById("analysisSub");
+  const lineEl = document.getElementById("analysisLine");
+  const fill = document.getElementById("analysisFill");
+  if(!wrap||!pctEl||!subEl||!lineEl||!fill) return;
+  wrap.classList.remove("hidden");
+  const v = Math.max(0, Math.min(100, pct|0));
+  pctEl.textContent = v + "%";
+  subEl.textContent = sub || "分析中…";
+  lineEl.textContent = line || "正在剪辑与校验音高…";
+  fill.style.width = v + "%";
+  wrap.style.setProperty("--deg", (v/100*360).toFixed(1)+"deg");
+}
+function hideAnalysisProgress(){
+  const wrap = document.getElementById("analysisProgressWrap");
+  if(wrap) wrap.classList.add("hidden");
+}
+
+async function rebuildEventsOffline(params){
+  // Use pitchTimeline to rebuild note events after recording (reduces "two pitches in one note").
+  const tlAll = (pitchTimeline||[]).filter(p=>p && Number.isFinite(p.tMs) && Number.isFinite(p.midi) && Number.isFinite(p.cents));
+  if(tlAll.length < 3) return [];
+  const minRms = 0.004;
+  const gapMs = 70;
+  const changeHoldMs = 90;     // must persist to commit note change
+  const minKeepMs = 60;
+  const minScoreMs = 110;      // short transitions won't score
+
+  // Build arrays and smooth midi with rolling median
+  setAnalysisProgress(5, "预处理", "平滑音高轨迹…");
+  await new Promise(r=>setTimeout(r,0));
+
+  const midiArr = tlAll.map(p=>p.midi);
+  const win = 7;
+  const smMidi = new Array(tlAll.length);
+  for(let i=0;i<tlAll.length;i++){
+    smMidi[i] = Math.round(rollingMedian(midiArr,i,win));
+    if(i % 400 === 0){
+      setAnalysisProgress(5 + Math.floor(i/tlAll.length*30), "预处理", "平滑音高轨迹…");
+      await new Promise(r=>setTimeout(r,0));
+    }
+  }
+
+  setAnalysisProgress(40, "剪辑中", "根据稳定音高切分音符…");
+  await new Promise(r=>setTimeout(r,0));
+
+  const events2 = [];
+  let cur=null;
+  let pending=null;
+
+  function closeCur(endIdx){
+    if(!cur) return;
+    const endMs = tlAll[endIdx].tMs;
+    const durMs = endMs - cur.startMs;
+    if(durMs <= 0){ cur=null; return; }
+
+    const slice = tlAll.slice(cur.startIdx, endIdx+1);
+    const centsMed = median(slice.map(p=>p.cents));
+    const hzMed = median(slice.map(p=>p.hz).filter(Number.isFinite));
+    const confMean = mean(slice.map(p=>p.confidence).filter(Number.isFinite));
+    const rmsMed = median(slice.map(p=>p.rms).filter(Number.isFinite));
+
+    const midi = cur.midi;
+    const note = slice[Math.floor(slice.length/2)].note || cur.note || "—";
+
+    const inKey = isNoteInKey(midi, params.keyClass);
+    let category = (durMs >= params.longMs) ? "long" : (inKey ? "short_in" : "other");
+
+    const veryQuiet = Number.isFinite(rmsMed) && rmsMed < minRms;
+    const extreme = Math.abs(centsMed) >= 40;
+
+    if(veryQuiet && durMs >= 200) category = "other";
+    if(extreme && (veryQuiet || confMean < 0.45)) category = "other";
+    if(durMs < minScoreMs) category = "other";
+    if(durMs < minKeepMs && (veryQuiet || confMean < 0.35)){ cur=null; return; }
+
+    const pass = Math.abs(centsMed) <= params.centsTol;
+
+    events2.push({
+      startMs: Math.round(cur.startMs),
+      endMs: Math.round(endMs),
+      durMs: Math.round(durMs),
+      detectedLabel: note,
+      hz: hzMed,
+      cents: centsMed,
+      conf: confMean,
+      inKey,
+      category,
+      pass,
+    });
+    cur=null;
+  }
+
+  for(let i=0;i<tlAll.length;i++){
+    const p = tlAll[i];
+    const m = smMidi[i];
+    const isSilent = !Number.isFinite(p.rms) || p.rms < minRms;
+    if(isSilent){
+      if(cur){
+        const prev = tlAll[i-1] || p;
+        if(p.tMs - prev.tMs > gapMs) closeCur(i-1);
+      }
+      pending=null;
+      continue;
+    }
+    if(!cur){
+      cur = {startIdx:i, startMs:p.tMs, midi:m, note:p.note};
+      pending=null;
+      continue;
+    }
+    if(m === cur.midi){
+      pending=null;
+      continue;
+    }
+    if(!pending || pending.midi !== m){
+      pending = {midi:m, sinceIdx:i, sinceMs:p.tMs};
+      continue;
+    }
+    if(p.tMs - pending.sinceMs >= changeHoldMs){
+      closeCur(i-1);
+      cur = {startIdx: pending.sinceIdx, startMs: pending.sinceMs, midi: pending.midi, note: p.note};
+      pending=null;
+    }
+    if(i % 350 === 0){
+      setAnalysisProgress(40 + Math.floor(i/tlAll.length*40), "剪辑中", "根据稳定音高切分音符…");
+      await new Promise(r=>setTimeout(r,0));
+    }
+  }
+  if(cur) closeCur(tlAll.length-1);
+
+  setAnalysisProgress(85, "整理中", "合并碎片并计算得分…");
+  await new Promise(r=>setTimeout(r,0));
+
+  // Merge adjacent identical notes separated by tiny gaps
+  const merged=[];
+  const mergeGap=50;
+  for(const e of events2){
+    const prev = merged[merged.length-1];
+    if(prev && prev.detectedLabel===e.detectedLabel && (e.startMs - prev.endMs) <= mergeGap){
+      prev.endMs = e.endMs;
+      prev.durMs = prev.endMs - prev.startMs;
+      prev.cents = (prev.cents*prev.durMs + e.cents*e.durMs) / (prev.durMs + e.durMs);
+      prev.pass = Math.abs(prev.cents) <= params.centsTol;
+      continue;
+    }
+    merged.push({...e});
+  }
+  setAnalysisProgress(100, "完成", "报告已生成");
+  setTimeout(hideAnalysisProgress, 500);
+  return merged;
+}
+
+
