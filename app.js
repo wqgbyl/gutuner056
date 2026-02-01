@@ -1298,8 +1298,12 @@ async function exportVideo(){
     const cy = y + h*0.70;
     const radius = Math.min(w, h)*0.36;
 
-    const start = Math.PI * 1.08;
-    const end   = Math.PI * -0.08;
+   // Arc centered at "up": 0c at straight up
+// Left = flat (-), Right = sharp (+)
+const span = Math.PI * 0.85;     // 扇形张角（越大越“开”）
+const center = -Math.PI / 2;     // 正上方
+const start = center - span/2;   // 左端
+const end   = center + span/2;   // 右端
 
     const maxC=50;
     const mapAngle = (c)=>{
