@@ -1,0 +1,62 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>音准分析器 V0.4.1</title><link rel="stylesheet" href="style.css"/></head><body><header class="topbar"><div><h1>音准分析器（网页版 V0.4.1）</h1><div class="sub">全音识别 · 更稳的长/短音切分 · 整段/单段回放 · 标准音(2秒)试听</div></div></header><main class="grid"><section class="card"><h2>测试设置</h2><div class="row"><label>输入类型</label><select id="inputProfile"><option value="oboe">双簧管</option><option value="voice" selected>人声（测试）</option></select></div><div class="row"><label>本次调性（用于分类）</label><select id="keyClass"><option value="C">C 大调</option><option value="G">G 大调</option><option value="D" selected>D 大调</option><option value="A">A 大调</option><option value="E">E 大调</option><option value="B">B 大调</option><option value="F">F 大调</option><option value="Bb">Bb 大调</option><option value="Eb">Eb 大调</option><option value="Ab">Ab 大调</option></select></div><div class="row"><label>A4 基准</label><select id="aRef"><option value="440">440 Hz</option><option value="442" selected>442 Hz</option></select></div>
+      <div class="row">
+        <label>合格阈值（± cents）</label>
+        <div class="inline">
+          <button id="btnTolMinus" class="smallBtn primaryBtn" type="button">-5</button>
+          <div class="tolBox"><span id="centsTolVal">10</span></div>
+          <button id="btnTolPlus" class="smallBtn primaryBtn" type="button">+5</button>
+          <input id="centsTol" type="hidden" value="20" />
+        </div>
+      </div>
+      <div class="row">
+        <label>长音阈值</label>
+        <div class="inline"><span class="fixedVal">150 ms（固定）</span></div>
+      </div>
+      <div class="row">
+        <label>短音权重</label>
+        <div class="inline"><span class="fixedVal">0.40（固定）</span></div>
+      </div>
+<div class="controls"><button id="btnStart">开始录制</button><button id="btnStop" disabled>结束并生成报告</button></div><div class="hint">“很多音被判成短音”通常是音高抖动导致事件拆碎。V0.4.1 已加入「换音确认(≥2次)」与「短间隙自动合并」。<br/>回放：报告区顶部有「整段回放 / 选中事件回放 / 标准音(2秒)」。</div></section><section class="card"><h2>实时监测</h2><div class="live"><div class="liveItem"><div class="label">检测音名</div><div class="value" id="liveNote">—</div></div><div class="liveItem"><div class="label">频率</div><div class="value" id="liveHz">—</div></div><div class="liveItem"><div class="label">偏差（相对目标音）</div><div class="value" id="liveCents">—</div></div></div><div class="meterBox"><div class="meterLabel">输入电平</div><div class="meter"><div class="meterFill" id="meterFill"></div></div><div class="meterText" id="meterText">— dBFS</div></div><div class="tunerCard">
+  <div class="tunerTop">
+    <div class="tunerA4" id="tunerA4">A4 = 440Hz</div>
+    <div class="tunerHz" id="tunerHz">—</div>
+  </div>
+  <canvas id="liveTuner" width="1200" height="520" class="liveTuner"></canvas>
+</div>
+<canvas id="scope" width="800" height="160" class="scope"></canvas>
+
+      <div class="scorePanel">
+        <div class="scoreCard">
+          <div class="scoreTitle">长音评分</div>
+          <div class="scoreValue" id="scoreLong">50</div>
+          <div class="scoreSub" id="scoreLongSub">等待事件…</div>
+          <div class="scoreBadge" id="scoreLongBadge">及格线 50</div>
+        </div>
+        <div class="scoreCard">
+          <div class="scoreTitle">短音评分</div>
+          <div class="scoreValue" id="scoreShort">50</div>
+          <div class="scoreSub" id="scoreShortSub">等待事件…</div>
+          <div class="scoreBadge" id="scoreShortBadge">及格线 50</div>
+        </div>
+      </div>
+<div class="liveMeta"><span id="liveClass">未开始</span><span class="dot">•</span><span>已记录事件：<b id="countAll">0</b>（长 <b id="countLong">0</b> / 短调内 <b id="countShortIn">0</b> / 其他 <b id="countOther">0</b>）</span></div></section><section class="card span2"><h2>报告（结束后生成）</h2><div class="row wrap"><div class="inline"><label style="width:auto;">查看</label><select id="viewFilter"><option value="all" selected>全部</option><option value="long">仅长音（Long）</option><option value="short_in">仅短音-调内（Short in-key）</option><option value="other">仅其他（Short out-of-key）</option></select></div><div class="inline" style="gap:8px;"><button id="btnPlayAll" class="smallBtn">整段回放</button><button id="btnPlaySel" class="smallBtn ghost" disabled>选中事件回放</button><button id="btnRefSel" class="smallBtn ghost" disabled>选中标准音(2s)</button><button id="btnStopAudio" class="smallBtn ghost" disabled>停止</button></div></div><div class="selectHint" id="selectHint">未选中事件：点击表格任意一行即可选中并回放。</div><div class="kpis"><div class="kpi primary"><div class="kpiTitle">Overall Accuracy（主分数）</div><div class="kpiValue" id="kpiOverall">—</div><div class="kpiSub" id="kpiOverallSub">—</div></div><div class="kpi"><div class="kpiTitle">Long Accuracy（≥阈值）</div><div class="kpiValue" id="kpiLong">—</div><div class="kpiSub" id="kpiLongSub">—</div></div><div class="kpi"><div class="kpiTitle">Short Accuracy（调内）</div><div class="kpiValue" id="kpiShort">—</div><div class="kpiSub" id="kpiShortSub">—</div></div></div>
+<div class="trendMeta" id="trendMeta">—</div>
+        </div>
+        <canvas id="trend" width="1200" height="260" class="trend"></canvas>
+      </div>
+
+      <div class="row wrap">
+        <div class="inline" style="gap:8px;">
+          <button id="btnExportVideo" class="exportBtn" disabled>下载导出分析视频（WebM）</button>
+          <div class="exportProg hidden" id="exportProg">
+            <div class="exportProgTop">
+              <div class="exportProgTitle" id="exportProgTitle">正在生成视频…</div>
+              <div class="exportProgPct" id="exportProgPct">0%</div>
+            </div>
+            <div class="exportBar"><div class="exportBarFill" id="exportBarFill"></div></div>
+            <div class="exportProgHint" id="exportProgHint">不会回放声音；生成完成后自动下载。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tableWrap"><table id="eventsTable"><thead><tr><th>#</th><th>start–end(ms)</th><th>dur(ms)</th><th>检测音名</th><th>目标音名</th><th>Hz</th><th>目标Hz</th><th>cents</th><th>合格</th><th>分类</th></tr></thead><tbody></tbody></table></div><div class="footerNote" id="reportMeta"></div></section></main><script src="app.js"></script></body></html>
