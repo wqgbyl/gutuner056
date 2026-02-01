@@ -51,9 +51,6 @@ const UI = {
   meterFill: document.getElementById("meterFill"),
   meterText: document.getElementById("meterText"),
   scope: document.getElementById("scope"),
-  liveTuner: document.getElementById("liveTuner"),
-  tunerA4: document.getElementById("tunerA4"),
-  tunerHz: document.getElementById("tunerHz"),
   btnTolMinus: document.getElementById("btnTolMinus"),
   btnTolPlus: document.getElementById("btnTolPlus"),
   centsTolVal: document.getElementById("centsTolVal"),
@@ -319,173 +316,6 @@ function drawScopeAndMeter(timeBuf,profile,pitch){
   ctx.fillStyle="#9aa3b2";
   const p=pitch?`${pitch.freqHz.toFixed(1)}Hz · conf ${pitch.confidence.toFixed(2)}`:"—";
   ctx.fillText(`${profile.label} · ${p}`,10,18);
-}
-
-
-// TE-like live dial state + renderer (RAF) to avoid UI jank
-const LiveDial = {
-  note: "—",
-  cents: 0,
-  tol: 20,
-  hz: 0,
-  smooth: 0,
-  smoothInit: false,
-  lastMs: 0,
-  visualPass: true,
-};
-
-function drawTEDial(){
-  if(!UI.liveTuner) return;
-  const c = UI.liveTuner;
-  const g = c.getContext("2d");
-  const W = c.width, H = c.height;
-
-  // background
-  g.clearRect(0,0,W,H);
-  g.fillStyle = "#2b333f";
-  g.fillRect(0,0,W,H);
-
-  // top arc area
-  const pad = 20;
-  const cx = W/2;
-  const cy = H*0.66; // center lower, dial points up
-  const radius = Math.min(W, H)*0.62;
-
-  const start = Math.PI*1.10;
-  const end = Math.PI*-0.10;
-  const maxC = 50;
-
-  const mapAngle = (v)=>{
-    const cc = Math.max(-maxC, Math.min(maxC, v));
-    const t = (cc + maxC) / (2*maxC);
-    return start + (end-start)*t;
-  };
-
-  // arcs: red (outside tol) + green (inside tol)
-  const tol = LiveDial.tol || 20;
-  const aL = mapAngle(-tol);
-  const aR = mapAngle(+tol);
-
-  // red left
-  g.globalAlpha = 0.20;
-  g.strokeStyle = "#ff5a6a";
-  g.lineWidth = 20;
-  g.beginPath(); g.arc(cx,cy,radius,start,aL,false); g.stroke();
-  // green
-  g.strokeStyle = "#7CFF00";
-  g.beginPath(); g.arc(cx,cy,radius,aL,aR,false); g.stroke();
-  // red right
-  g.strokeStyle = "#ff5a6a";
-  g.beginPath(); g.arc(cx,cy,radius,aR,end,false); g.stroke();
-  g.globalAlpha = 1;
-
-  // tick marks + labels
-  g.strokeStyle = "rgba(234,238,247,0.55)";
-  g.fillStyle = "rgba(234,238,247,0.75)";
-  g.lineWidth = 2;
-  g.font = "800 20px ui-sans-serif, system-ui";
-  for(let v=-50; v<=50; v+=10){
-    const a = mapAngle(v);
-    const r1 = radius-4;
-    const r2 = radius-34;
-    const x1 = cx + Math.cos(a)*r1;
-    const y1 = cy + Math.sin(a)*r1;
-    const x2 = cx + Math.cos(a)*r2;
-    const y2 = cy + Math.sin(a)*r2;
-    g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.stroke();
-
-    if(v===-50 || v===-20 || v===0 || v===20 || v===50){
-      const rl = radius-62;
-      const xl = cx + Math.cos(a)*rl;
-      const yl = cy + Math.sin(a)*rl + 7;
-      g.textAlign="center";
-      g.fillText(String(v), xl, yl);
-    }
-  }
-
-  // needle
-  const cents = LiveDial.smoothInit ? LiveDial.smooth : LiveDial.cents;
-  const pass = LiveDial.visualPass;
-  const ang = mapAngle(cents);
-  const nx = cx + Math.cos(ang)*(radius-54);
-  const ny = cy + Math.sin(ang)*(radius-54);
-
-  g.strokeStyle = pass ? "#7CFF00" : "#ff5a6a";
-  g.lineWidth = 12;
-  g.lineCap = "round";
-  g.beginPath(); g.moveTo(cx,cy); g.lineTo(nx,ny); g.stroke();
-
-  // center check circle (green if pass, red if fail)
-  const circleR = 56;
-  g.fillStyle = pass ? "#7CFF00" : "#ff5a6a";
-  g.beginPath(); g.arc(cx, cy-8, circleR, 0, Math.PI*2); g.fill();
-
-  // check mark
-  g.strokeStyle = "#0f1117";
-  g.lineWidth = 14;
-  g.lineCap = "round";
-  g.beginPath();
-  g.moveTo(cx-20, cy-8);
-  g.lineTo(cx-4, cy+10);
-  g.lineTo(cx+26, cy-24);
-  g.stroke();
-
-  // cents box
-  const ct = `${cents>=0?"+":""}${(isFinite(cents)?cents:0).toFixed(0)}¢`;
-  const boxW = 190, boxH = 76;
-  const bx = W*0.70;
-  const by = H*0.36;
-  g.fillStyle = "rgba(20,24,31,0.55)";
-  g.strokeStyle = "rgba(234,238,247,0.25)";
-  g.lineWidth = 2;
-  g.beginPath();
-  const r = 10;
-  g.moveTo(bx+r,by);
-  g.arcTo(bx+boxW,by,bx+boxW,by+boxH,r);
-  g.arcTo(bx+boxW,by+boxH,bx,by+boxH,r);
-  g.arcTo(bx,by+boxH,bx,by,r);
-  g.arcTo(bx,by,bx+boxW,by,r);
-  g.closePath();
-  g.fill(); g.stroke();
-
-  g.fillStyle = "#a9b2c4";
-  g.font = "950 48px ui-sans-serif, system-ui";
-  g.textAlign="center";
-  g.fillText(ct, bx+boxW/2, by+54);
-
-  // big note panel (green bar)
-  const panelH = H*0.36;
-  g.fillStyle = "#7CFF00";
-  g.fillRect(0, H-panelH, W, panelH);
-
-  g.fillStyle = "#162018";
-  g.font = "900 40px ui-sans-serif, system-ui";
-  g.textAlign="left";
-  g.fillText("Concert", 32, H-panelH + 64);
-
-  g.fillStyle = "#162018";
-  g.font = "980 160px ui-sans-serif, system-ui";
-  g.textAlign="center";
-  g.fillText(LiveDial.note || "—", W/2, H - 54);
-
-  // top labels
-  if(UI.tunerA4) UI.tunerA4.textContent = `A4 = ${readParams().aRef}Hz`;
-  if(UI.tunerHz){
-    UI.tunerHz.textContent = (LiveDial.hz && isFinite(LiveDial.hz)) ? `≈ ${LiveDial.hz.toFixed(1)}Hz` : "—";
-  }
-}
-
-function startDialRAF(){
-  let last=0;
-  const minDt = 1000/30;
-  function tick(ts){
-    if(!last || (ts-last)>=minDt){
-      try{ drawTEDial(); }catch(e){ console.error(e); }
-      last=ts;
-    }
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
 }
 
 // ---------------- recorder ----------------
@@ -1092,9 +922,6 @@ async function start(){
     if(!lastPitch || lastPitch.confidence < prof.confMin){
       handleNoPitch(tMs, params);
       renderLive(null);
-      if(typeof LiveDial!=='undefined'){
-        LiveDial.note = '—'; LiveDial.cents = 0; LiveDial.hz = 0; LiveDial.visualPass = true; LiveDial.smoothInit=false;
-      }
       rafId=requestAnimationFrame(loop);
       return;
     }
@@ -1155,7 +982,7 @@ async function start(){
     curEvent.confArr.push(lastPitch.confidence);
 
     // timeline sample for trend/video
-    pitchTimeline.push({tMs: tMs, cents: cents, pass: Math.abs(cents) <= params.centsTol, category: ( (tMs-curEvent.startMs)>=params.longMs ? 'long' : (inKey?'short_in':'other') ), note: formatAccidentals(targetLabel), midi: midiRounded});
+    pitchTimeline.push({tMs: tMs, cents: cents, pass: Math.abs(cents) <= params.centsTol, category: ( (tMs-curEvent.startMs)>=params.longMs ? 'long' : (inKey?'short_in':'other') ), note: targetLabel, midi: midiRounded});
 
     renderLive({detectedLabel, hz:f, cents});
     updateCounters(params);
@@ -1203,9 +1030,6 @@ function stop(){
 
   UI.liveClass.textContent="已结束";
   renderLive(null);
-      if(typeof LiveDial!=='undefined'){
-        LiveDial.note = '—'; LiveDial.cents = 0; LiveDial.hz = 0; LiveDial.visualPass = true; LiveDial.smoothInit=false;
-      }
   try{ renderReport(params); }catch(e){ console.error(e); alert('报告生成失败：'+(e && e.message ? e.message : e)); }
   renderTrend();
   if(UI.btnExportVideo) UI.btnExportVideo.disabled = !recordedBuffer;
@@ -1278,7 +1102,7 @@ async function exportVideo(){
   const shortS = Math.round(k.shortScore);
   const tol = params.centsTol;
   // Needle smoothing (visual only): makes motion linear & comfortable.
-  const needleTauMs = 260;   // time constant (ms). higher = smoother/slower
+  const needleTauMs = 180;   // time constant (ms). higher = smoother/slower
   const hystCents = 2.0;     // pass/fail hysteresis (visual only) to avoid flicker
   let smoothCents = 0;
   let smoothInit = false;
@@ -1670,8 +1494,6 @@ if(UI.btnExportVideo){
   });
 }
 
-startDialRAF();
-
 UI.btnStart.addEventListener("click", async ()=>{
   try{ await start(); }
   catch(err){
@@ -1682,11 +1504,3 @@ UI.btnStart.addEventListener("click", async ()=>{
   }
 });
 UI.btnStop.addEventListener("click", ()=>stop());
-function formatAccidentals(label){
-  if(!label) return label;
-  // Convert ASCII accidentals to Unicode (学院派)
-  // e.g. "Bb"->"B♭", "F#"->"F♯"
-  return label.replace(/#/g,"♯").replace(/b/g,"♭");
-}
-
-
