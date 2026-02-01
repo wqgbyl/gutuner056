@@ -329,3 +329,41 @@ canvas{
   font-size: 12px;
   font-weight: 800;
 }
+
+/* Main recording controls always visible */
+.mainControls{
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  padding: 10px 12px;
+  background: rgba(11,13,18,0.82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.primaryBtn, .dangerBtn{
+  flex: 1;
+  border-radius: 14px;
+  padding: 14px 14px;
+  font-weight: 950;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.primaryBtn{ background: rgba(74,210,122,0.18); color: var(--text); }
+.primaryBtn:active{ transform: translateY(1px); }
+.dangerBtn{ background: rgba(255,90,106,0.18); color: var(--text); }
+.dangerBtn:active{ transform: translateY(1px); }
+.dangerBtn:disabled, .primaryBtn:disabled{ opacity: 0.45; cursor:not-allowed; transform:none; }
+
+/* Slightly denser UI */
+body{ font-size: 14px; }
+h1{ font-size: 18px; }
+.card{ padding: 12px; }
+.kpiValue{ font-size: 28px; }
+@media (max-width: 520px){
+  body{ font-size: 13px; }
+  .card{ padding: 10px; }
+  .exportBtn{ padding: 14px 14px; font-size: 15px; }
+}

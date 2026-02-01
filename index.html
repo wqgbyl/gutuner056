@@ -1,11 +1,11 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>音准分析器 V0.4.1</title><link rel="stylesheet" href="style.css"/></head><body><header class="topbar"><div><h1>音准分析器（网页版 V0.4.1）</h1><button id="btnSettings" class="iconBtn" type="button" aria-label="设置">⚙️</button><div class="sub">全音识别 · 更稳的长/短音切分 · 整段/单段回放 · 标准音(2秒)试听</div></div></header><main class="grid"><section class="card"><h2>测试设置</h2>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>音准分析器 V0.4.1</title><link rel="stylesheet" href="style.css"/></head><body><header class="topbar"><div><h1>音准分析器（网页版 V0.4.1）</h1><button id="btnSettings" class="iconBtn" type="button" aria-label="设置">⚙️</button><div class="sub">全音识别 · 更稳的长/短音切分 · 整段/单段回放 · 标准音(2秒)试听</div></div></header>
+<div class="mainControls"><button id="btnStart" class="primaryBtn" type="button">开始录制</button><button id="btnStop" class="dangerBtn" type="button" disabled>结束并生成报告</button></div><main class="grid"><section class="card"><h2>测试设置</h2>
   <div class="settingsSummary">
     <div class="pill"><span class="muted">输入</span> <span id="sumProfile">—</span></div>
     <div class="pill"><span class="muted">调性</span> <span id="sumKey">—</span></div>
     <div class="pill"><span class="muted">A4</span> <span id="sumA4">—</span></div>
     <div class="pill"><span class="muted">阈值</span> <span id="sumTol">—</span></div>
-    <div class="hint">点右上角⚙️修改设置</div>
-  </div>
+    </div>
 </section><section class="card"><h2>实时监测</h2><div class="live"><div class="liveItem"><div class="label">检测音名</div><div class="value" id="liveNote">—</div></div><div class="liveItem"><div class="label">频率</div><div class="value" id="liveHz">—</div></div><div class="liveItem"><div class="label">偏差</div><div class="value" id="liveCents">—</div></div></div><div class="meterBox"><div class="meterLabel">输入电平</div><div class="meter"><div class="meterFill" id="meterFill"></div></div><div class="meterText" id="meterText">— dBFS</div></div><canvas id="scope" width="800" height="160" class="scope"></canvas>
 
       <div class="scorePanel">
@@ -22,11 +22,9 @@
           <div class="scoreBadge" id="scoreShortBadge">及格线 50</div>
         </div>
       </div>
-<div class="liveMeta"><span id="liveClass">未开始</span><span class="dot">•</span><span>已记录事件：<b id="countAll">0</b>（长 <b id="countLong">0</b> / 短调内 <b id="countShortIn">0</b> / 其他 <b id="countOther">0</b>）</span></div></section><section class="card span2"><h2>报告（结束后生成）</h2><div class="row wrap"><div class="inline"><label style="width:auto;">查看</label><select id="viewFilter"><option value="all" selected>全部</option><option value="long">仅长音（Long）</option><option value="short_in">仅短音-调内（Short in-key）</option><option value="other">仅其他（Short out-of-key）</option></select></div><div class="inline" style="gap:8px;"><button id="btnPlayAll" class="smallBtn">整段回放</button><button id="btnPlaySel" class="smallBtn ghost" disabled>选中事件回放</button><button id="btnRefSel" class="smallBtn ghost" disabled>选中标准音(2s)</button><button id="btnStopAudio" class="smallBtn ghost" disabled>停止</button></div></div><div class="selectHint" id="selectHint">未选中事件：点击表格任意一行即可选中并回放。</div><div class="kpis"><div class="kpi primary"><div class="kpiTitle">Overall Accuracy（主分数）</div><div class="kpiValue" id="kpiOverall">—</div><div class="kpiSub" id="kpiOverallSub">—</div></div><div class="kpi"><div class="kpiTitle">Long Accuracy（≥阈值）</div><div class="kpiValue" id="kpiLong">—</div><div class="kpiSub" id="kpiLongSub">—</div></div><div class="kpi"><div class="kpiTitle">Short Accuracy（调内）</div><div class="kpiValue" id="kpiShort">—</div><div class="kpiSub" id="kpiShortSub">—</div></div></div>
-<div class="trendMeta" id="trendMeta">—</div>
+<div class="liveMeta"><span id="liveClass">未开始</span><span class="dot">•</span><span>已记录事件：<b id="countAll">0</b>（长 <b id="countLong">0</b> / 短调内 <b id="countShortIn">0</b> / 其他 <b id="countOther">0</b>）</span></div></section><section class="card span2"><h2>报告（结束后生成）</h2><div class="row wrap"><div class="inline"><label style="width:auto;">查看</label><select id="viewFilter"><option value="all" selected>全部</option><option value="long">仅长音（Long）</option><option value="short_in">仅短音-调内（Short in-key）</option><option value="other">仅其他（Short out-of-key）</option></select></div><div class="inline" style="gap:8px;"><button id="btnPlayAll" class="smallBtn">整段回放</button><button id="btnPlaySel" class="smallBtn ghost" disabled>选中事件回放</button><button id="btnRefSel" class="smallBtn ghost" disabled>选中标准音(2s)</button><button id="btnStopAudio" class="smallBtn ghost" disabled>停止</button></div></div><div class="selectHint" id="selectHint">未选中事件：点击表格任意一行即可选中并回放。</div><div class="kpis"><div class="kpi primary"><div class="kpiTitle">Overall Accuracy（主分数）</div><div class="kpiValue" id="kpiOverall">—</div></div>
+</div>
         </div>
-        <canvas id="trend" width="1200" height="260" class="trend"></canvas>
-      </div>
 
       <div class="row wrap">
         <div class="inline" style="gap:8px;">
@@ -70,7 +68,7 @@
         <label>短音权重</label>
         <div class="inline"><span class="fixedVal">0.40（固定）</span></div>
       </div>
-<div class="controls"><button id="btnStart">开始录制</button><button id="btnStop" disabled>结束并生成报告</button></div><div class="hint">“很多音被判成短音”通常是音高抖动导致事件拆碎。V0.4.1 已加入「换音确认(≥2次)」与「短间隙自动合并」。<br/>回放：报告区顶部有「整段回放 / 选中事件回放 / 标准音(2秒)」。</div>
+<div class="hint">“很多音被判成短音”通常是音高抖动导致事件拆碎。V0.4.1 已加入「换音确认(≥2次)」与「短间隙自动合并」。<br/>回放：报告区顶部有「整段回放 / 选中事件回放 / 标准音(2秒)」。</div>
       </div>
     </div>
   </div>

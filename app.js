@@ -561,7 +561,7 @@ function updateCounters(params){
 
   renderLiveScores();
 
-  UI.kpiOverallSub.textContent =
+  if(UI.kpiOverallSub) UI.kpiOverallSub.textContent =
     `分类调性=${params.keyClass}大调 · A4=${params.aRef}Hz · 阈值±${params.centsTol}c · 长音≥${params.longMs}ms · (V0.4.2 防吞音)`;
 }
 
@@ -622,12 +622,12 @@ function renderReport(params){
   const k=computeKpis(params);
 
   UI.kpiOverall.textContent = `${Math.round(k.overallScore)}`;
-  UI.kpiLong.textContent = k.longTotal ? `${Math.round(k.longScore)}` : "—";
-  UI.kpiShort.textContent = k.shortTotal ? `${Math.round(k.shortScore)}` : "—";
+  if(UI.kpiLong) UI.kpiLong.textContent = k.longTotal ? `${Math.round(k.longScore)}` : "—";
+  if(UI.kpiShort) UI.kpiShort.textContent = k.shortTotal ? `${Math.round(k.shortScore)}` : "—";
 
-  UI.kpiLongSub.textContent=k.longTotal?`${k.longPass}/${k.longTotal} · 平均|cents|=${k.longAbs.toFixed(1)}`:"无长音事件";
-  UI.kpiShortSub.textContent=k.shortTotal?`${k.shortPass}/${k.shortTotal} · 平均|cents|=${k.shortAbs.toFixed(1)}`:"无短音-调内事件";
-  UI.kpiOverallSub.textContent = `综合分(满分100)：${k.overallMode==="only_long"?"仅按长音（短音≤20%不计入）":"长音+短音-调内(0.40权重)"} · 其他=${k.otherTotal} · 平均|cents|=${k.allAbs.toFixed(1)} · 阈值±${params.centsTol}c`;
+  if(UI.kpiLongSub) UI.kpiLongSub.textContent=k.longTotal?`${k.longPass}/${k.longTotal} · 平均|cents|=${k.longAbs.toFixed(1)}`:"无长音事件";
+  if(UI.kpiShortSub) UI.kpiShortSub.textContent=k.shortTotal?`${k.shortPass}/${k.shortTotal} · 平均|cents|=${k.shortAbs.toFixed(1)}`:"无短音-调内事件";
+  if(UI.kpiOverallSub) UI.kpiOverallSub.textContent = `综合分(满分100)：${k.overallMode==="only_long"?"仅按长音（短音≤20%不计入）":"长音+短音-调内(0.40权重)"} · 其他=${k.otherTotal} · 平均|cents|=${k.allAbs.toFixed(1)} · 阈值±${params.centsTol}c`;
 
   UI.reportMeta.textContent = `本次设置：输入=${UI.inputProfile.value==="voice"?"人声":"双簧管"} · 分类调性=${params.keyClass}大调 · A4=${params.aRef}Hz · 阈值±${params.centsTol}c · 长音阈值=150ms(固定) · 短音权重=0.40(固定) · 事件数=${events.length} · 回放=${recordedBuffer?"可用":"不可用"}`;
 
@@ -856,8 +856,8 @@ async function start(){
   UI.eventsTbody.innerHTML="";
   UI.reportMeta.textContent="";
   UI.kpiOverall.textContent="—";
-  UI.kpiLong.textContent="—";
-  UI.kpiShort.textContent="—";
+  if(UI.kpiLong) UI.kpiLong.textContent="—";
+  if(UI.kpiShort) UI.kpiShort.textContent="—";
   setSelectedIndex(-1);
   UI.btnPlayAll.disabled=true;
   UI.btnStopAudio.disabled=true;
