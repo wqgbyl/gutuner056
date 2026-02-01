@@ -226,6 +226,12 @@ function isInKey(pitchClass,key){
   return set.has(normalizePC(pitchClass));
 }
 
+// Back-compat alias (older code used isNoteInKey)
+function isNoteInKey(midi, keyClass){
+  return isInKey(midi, keyClass);
+}
+
+
 // ---------------- profile & YIN ----------------
 function getProfile(){
   if(UI.inputProfile.value==="oboe"){
