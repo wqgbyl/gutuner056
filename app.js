@@ -228,7 +228,8 @@ function isInKey(pitchClass,key){
 
 // Back-compat alias (older code used isNoteInKey)
 function isNoteInKey(midi, keyClass){
-  return isInKey(midi, keyClass);
+  const pc = midiToName(midi).name;   // "C", "F#", ...
+  return isInKey(pc, keyClass);
 }
 
 
@@ -1677,18 +1678,29 @@ async function rebuildEventsOffline(params){
 
     const pass = Math.abs(centsMed) <= params.centsTol;
 
-    events2.push({
-      startMs: Math.round(cur.startMs),
-      endMs: Math.round(endMs),
-      durMs: Math.round(durMs),
-      detectedLabel: note,
-      hz: hzMed,
-      cents: centsMed,
-      conf: confMean,
-      inKey,
-      category,
-      pass,
-    });
+   const tgt = midiToName(midi);
+const targetLabel = `${tgt.name}${tgt.octave}`;
+const hzTarget = midiToFreqEqual(midi, params.aRef);
+
+events2.push({
+  startMs: Math.round(cur.startMs),
+  endMs: Math.round(endMs),
+  durMs: Math.round(durMs),
+
+  detectedLabel: note,          // 这里保持你现在的 note
+  targetLabel,                  // ✅ 报表需要
+  midiRounded: midi,            // ✅ 合并/展示可能会用到
+
+  hzMeas: hzMed,                // ✅ 报表需要（原来叫 hz）
+  hzTarget,                     // ✅ 报表需要
+
+  cents: centsMed,
+  confidence: confMean,         // ✅ 报表里用 confidence
+
+  inKey,
+  category,
+  pass,
+});
     cur=null;
   }
 
