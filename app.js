@@ -444,7 +444,7 @@ function ensurePlayCtx(){
   return playCtx;
 }
 function stopAudio(){
-  try{ if(currentNode) currentNode.stop(); }catch(e){}
+  try{ if(currentNode) currentNode.await stop(); }catch(e){}
   currentNode=null;
   UI.btnStopAudio.disabled=true;
 }
@@ -714,7 +714,7 @@ function setFilter(val){
   }
   renderTable();
   setSelectedIndex(-1);
-  renderTrend();
+  if(typeof renderTrend==='function'){ try{ renderTrend(); }catch(e){} }
 }
 if(UI.btnFilterAll){
   UI.btnFilterAll.addEventListener("click", ()=>setFilter("all"));
@@ -999,7 +999,7 @@ async function start(){
   rafId=requestAnimationFrame(loop);
 }
 
-function stop(){
+async function stop(){
   if(!isRunning) return;
   const params=readParams();
 
@@ -1043,7 +1043,7 @@ function stop(){
   }catch(e){
     hideAnalysisProgress();
  console.error(e); alert('报告生成失败：'+(e && e.message ? e.message : e)); }
-  renderTrend();
+  if(typeof renderTrend==='function'){ try{ renderTrend(); }catch(e){} }
   if(UI.btnExportVideo) UI.btnExportVideo.disabled = !recordedBuffer;
 }
 
@@ -1053,7 +1053,7 @@ function setTol(newVal){
   UI.centsTol.value = String(v);
   if(UI.centsTolVal) UI.centsTolVal.textContent = String(v);
   // refresh dependent views
-  renderTrend();
+  if(typeof renderTrend==='function'){ try{ renderTrend(); }catch(e){} }
   renderTable();
   // scores depend on pass/fail, but we recompute pass only at finalize; for simplicity, refresh KPIs on report only.
 }
