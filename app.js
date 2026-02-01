@@ -1550,16 +1550,18 @@ function updateSettingsSummary(){
 }
 
 // Hook into existing UI init
-try{
-  setupSettingsModal();
-  // keep summary updated when user changes settings
-  document.addEventListener("change", (e)=>{
-    const id = e && e.target && e.target.id;
-    if(["inputProfile","keyClass","aRef","centsTol"].includes(id)) updateSettingsSummary();
-  });
-  document.addEventListener("click", (e)=>{
-    const id = e && e.target && e.target.id;
-    if(["btnTolMinus","btnTolPlus"].includes(id)) setTimeout(updateSettingsSummary, 0);
-  });
-  setTimeout(updateSettingsSummary, 0);
-}catch(e){ console.error(e); }
+window.addEventListener('DOMContentLoaded', ()=>{
+  try{
+    setupSettingsModal();
+    // keep summary updated when user changes settings
+    document.addEventListener('change', (e)=>{
+      const id = e && e.target && e.target.id;
+      if(["inputProfile","keyClass","aRef","centsTol"].includes(id)) updateSettingsSummary();
+    });
+    document.addEventListener('click', (e)=>{
+      const id = e && e.target && e.target.id;
+      if(["btnTolMinus","btnTolPlus"].includes(id)) setTimeout(updateSettingsSummary, 0);
+    });
+    setTimeout(updateSettingsSummary, 0);
+  }catch(e){ console.error(e); }
+});
