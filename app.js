@@ -444,7 +444,7 @@ function ensurePlayCtx(){
   return playCtx;
 }
 function stopAudio(){
-  try{ if(currentNode) currentNode.await stop(); }catch(e){}
+  try{ if(currentNode){ try{ currentNode.stop(); }catch(e){} } }catch(e){}
   currentNode=null;
   UI.btnStopAudio.disabled=true;
 }
